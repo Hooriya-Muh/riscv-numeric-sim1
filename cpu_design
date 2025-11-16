@@ -1,0 +1,287 @@
+1. Overview
+
+My CPU runs 32-bit RISC-V instructions using a clean single-cycle datapath. Every instruction goes through fetch, decode, execute, memory, and write-back in one cycle. The main goal was to make something that is easy to test and debug while still following the RISC-V rules.
+
+The CPU includes:
+
+ALU
+
+Register File
+
+Instruction Memory
+
+Data Memory
+
+PC logic
+
+Control Unit
+
+Immediate Generator
+
+Multiplexers for selecting data paths
+
+2. Top-Level CPU Diagram (ASCII)
+                         +-----------------------+
+                         |        PC (32)        |
+                         +-----------+-----------+
+                                     |
+                                     v
+                         +-----------------------+
+                         |   Instruction Memory   |
+                         +-----------+-----------+
+                                     |
+                                     v
+                         +-----------------------+
+                         |     Instruction       |
+                         +-----------+-----------+
+                                     |
+       +-----------------------------+-----------------------------+
+       |                                                           |
+       v                                                           v
++--------------+                                         +----------------+
+|  Register    |  rs1_data, rs2_data       Control       |   Control      |
+|   File       | <------------------------ Decode --------|    Unit        |
++------+-------+                                         +--------+-------+
+       |                                                           |
+       |                                                           |
+       v                                                           v
++--------------+                                       +---------------------+
+| Immediate    |<------------- imm fields -------------|    ALU Control      |
+| Generator    |                                       +---------------------+
++------+-------+
+       |
+       v
+                 +---------------------+
+                 |        MUX A        | <-- chooses between PC or rs1
+                 +----------+----------+
+                            |
+                            v
+                 +---------------------+
+                 |        ALU          |
+                 +----------+----------+
+                            |
+                            v
+                 +---------------------+
+                 |      ALU Result     |
+                 +----------+----------+
+                            |
+       +--------------------------------------------------+
+       |                                                  |
+       v                                                  v
++--------------+                                 +---------------------+
+|   Data       | <-- ALU result = address        |       MUX B         |
+|   Memory     | --> load_data                   +---------------------+
++------+-------+
+       |
+       v
+                    +-----------------------------+
+                    |        Writeback MUX        |
+                    +--------------+--------------+
+                                   |
+                                   v
+                          +----------------+
+                          | Register File  |
+                          +----------------+
+
+3. Instruction Subset Implemented
+Arithmetic
+
+add
+
+sub
+
+addi
+
+Logical
+
+and
+
+or
+
+xor
+
+Shift Instructions
+
+sll
+
+srl
+
+sra
+
+Memory
+
+lw
+
+sw
+
+Control Flow
+
+beq
+
+bne
+
+jal
+
+jalr
+
+Upper Immediate
+
+lui
+
+auipc
+
+These are enough to run basic RISC-V programs, including the test program provided in the assignment.
+
+4. ALU
+
+The ALU handles:
+
+addition
+
+subtraction
+
+logic ops (and/or/xor)
+
+shifts (sll/srl/sra)
+
+It uses a ripple-carry adder for addition and subtraction.
+It also outputs flags:
+
+N (negative)
+
+Z (zero)
+
+C (carry)
+
+V (overflow)
+
+                +---------------------+
+   A ---------->|                     |-----> result
+                |        ALU          |
+   B ---------->|   add/sub/logic     |
+                +----------+----------+
+                           |
+                           +---- flags (N,Z,C,V)
+
+5. Register File
+
+The CPU has 32 registers (x0–x31), each 32 bits wide.
+
+              +-------------------------------+
+   rs1 -----> |                               |
+              |         Register File          |
+   rs2 -----> |        (32 x 32-bit regs)      |
+              |                                 |
+   rd  <----- |      writeback data input       |
+              +-------------------------------+
+                 |             |
+            rs1_data       rs2_data
+
+
+x0 is always 0
+
+Writes to x0 are ignored
+
+6. Immediate Generator
+
+Generates 32-bit signed immediates for:
+
+I-type
+
+S-type
+
+B-type
+
+U-type
+
+J-type
+
+Handles sign-extension correctly.
+
+Inst[31:0] --> Immediate Generator --> imm[31:0]
+
+7. Control Unit
+
+The control unit is simple, all combinational.
+It reads:
+
+opcode
+
+funct3
+
+funct7
+
+And produces control signals for:
+
+ALU operation
+
+register write enable
+
+mem read/write
+
+branch decision
+
+immediate type
+
+writeback source
+
+PC selection
+
+              +---------------------------+
+Inst bits --->|       Control Unit       |---> control signals
+              +---------------------------+
+
+8. PC & Branch Logic
+
+The PC updates depending on the instruction:
+
+PC + 4                normal
+PC + immediate        for taken branches
+rs1 + immediate       for JALR
+
+
+Branches (beq, bne) compare rs1 and rs2 using the ALU.
+
+9. Single-Cycle Execution
+
+Everything happens in one cycle:
+
+Instruction fetch
+
+Register read
+
+Immediate generation
+
+ALU operation
+
+Memory access (lw/sw)
+
+Writeback to register file
+
+PC update
+
+This keeps the design simple and easy to trace.
+
+10. Test Program Support
+
+The CPU can execute the provided test_base.s and test_base.hex program, which checks:
+
+arithmetic
+
+memory store/load
+
+beq branching
+
+jal/jalr
+
+simple looping
+
+It matches the expected behavior.
+
+11. Notes
+
+All diagrams included are text-based since they’re easier to view in GitHub.
+
+The design is intentionally simple so it’s easy to extend later (pipelining, hazards, etc.).
+
+This document summarizes how the CPU works without making it overly complicated.
