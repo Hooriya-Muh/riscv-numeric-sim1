@@ -1,0 +1,8 @@
+{
+  "total_lines": 3274,
+  "ai_tagged_lines": 118,
+  "percent": 3.6,
+  "tools": ["ChatGPT"],
+  "method": "count markers",
+  "notes": "AI was used only for documentation wording, debugging explanations, and small non-core helpers. All core numeric logic (adder, shifter, MDU, FPU, IEEE-754 arithmetic, and tests) was written and validated manually."
+}

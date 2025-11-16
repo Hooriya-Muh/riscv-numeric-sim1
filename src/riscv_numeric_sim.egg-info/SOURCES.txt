@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+src/numeric_core/__init__.py
+src/numeric_core/adder.py
+src/numeric_core/alu.py
+src/numeric_core/bits.py
+src/numeric_core/fpu.py
+src/numeric_core/mdu.py
+src/numeric_core/shifter.py
+src/riscv_numeric_sim.egg-info/PKG-INFO
+src/riscv_numeric_sim.egg-info/SOURCES.txt
+src/riscv_numeric_sim.egg-info/dependency_links.txt
+src/riscv_numeric_sim.egg-info/top_level.txt
+tests/test_alu_add_sub.py
+tests/test_hex_helpers.py
+tests/test_m_extension.py
